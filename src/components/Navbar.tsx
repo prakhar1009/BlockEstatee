@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
@@ -9,11 +9,11 @@ import {
   Wallet, 
   Menu, 
   X, 
-  ChevronDown, 
   Bell, 
   Store, 
   User, 
-  Sparkles
+  Sparkles,
+  Landmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './ui/Button';
@@ -70,6 +70,7 @@ const Navbar = () => {
     { path: '/properties', label: 'Properties', icon: <Building className="h-5 w-5" /> },
     { path: '/marketplace', label: 'Marketplace', icon: <Store className="h-5 w-5" /> },
     { path: '/dashboard', label: 'Dashboard', icon: <PieChart className="h-5 w-5" /> },
+    { path: '/real-estate-nft', label: 'NFT Properties', icon: <Landmark className="h-5 w-5" /> },
     { path: '/nft-generator', label: 'NFT Generator', icon: <Sparkles className="h-5 w-5" /> },
   ];
 

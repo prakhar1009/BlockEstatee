@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { 
@@ -26,43 +26,82 @@ import PropertyCard from '../components/featured/PropertyCard';
 const featuredProperties = [
   {
     id: 1,
-    title: "Luxury Villa in Miami",
-    location: "Miami, FL",
+    title: "Jagran Lakecity University",
+    location: "Bhopal, MP",
     yield: 8.5,
-    type: "Residential",
-    price: 1000000,
-    raised: 780000,
-    image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80",
+    type: "Educational Campus",
+    price: 12000000,
+    raised: 9000000,
+    image: "https://lh3.googleusercontent.com/p/AF1QipNMj4qkotE7gXSCqwbU9iGD9HAIV7wo1ULMDuZk=s1360-w1360-h1020",
     status: "Funding",
-    daysLeft: 15,
-    investors: 48,
+    daysLeft: 30,
+    investors: 120,
     featured: true
   },
   {
     id: 2,
-    title: "Modern Apartment Complex",
-    location: "Austin, TX",
-    yield: 7.2,
-    type: "Residential",
-    price: 3000000,
-    raised: 1350000,
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80",
+    title: "Singapore Business Park",
+    location: "Singapore",
+    yield: 7.8,
+    type: "Business Park",
+    price: 15000000,
+    raised: 11000000,
+    image: "https://lh3.googleusercontent.com/p/AF1QipOWG4LxpLNGPtHNdr8oC9PSXH3nZ7fOMKtgRiYP=s1360-w1360-h1020",
     status: "Funding",
-    daysLeft: 23,
-    investors: 36
+    daysLeft: 25,
+    investors: 95
   },
   {
     id: 3,
-    title: "Commercial Office Space",
-    location: "Chicago, IL",
-    yield: 9.1,
-    type: "Commercial",
-    price: 3000000,
-    raised: 1800000,
-    image: "https://images.unsplash.com/photo-1577415124269-fc1140a69e91?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80",
+    title: "DB Mall",
+    location: "Bhopal, MP",
+    yield: 7.8,
+    type: "Commercial Mall",
+    price: 8000000,
+    raised: 5000000,
+    image: "https://helptravelindia.com/wp-content/uploads/2024/05/DB-City-Mall-Bhopal-Madhya-Pradesh.jpg",
+    status: "Funding",
+    daysLeft: 20,
+    investors: 85
+  },
+  {
+    id: 4,
+    title: "Exotica Farm House",
+    location: "Bhopal, MP",
+    yield: 8.2,
+    type: "Luxury Farm House",
+    price: 7500000,
+    raised: 5200000,
+    image: "https://lh3.googleusercontent.com/p/AF1QipPdcgU9Yap_LpnuyT8MXABOcA8F5VVJjD-0WrWM=s1360-w1360-h1020",
+    status: "Funding",
+    daysLeft: 15,
+    investors: 65
+  },
+  {
+    id: 5,
+    title: "NRK Business Park",
+    location: "Indore, MP",
+    yield: 8.9,
+    type: "Business Park",
+    price: 10500000,
+    raised: 8000000,
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AB5caB9T79ceP2e9b4UBgNjqjHfgbMxSDShB15fMf-iP6T06ZnXq1JghR5fEjCY7xkRPzeBwPEsEhRkNQvvs43mZ9mWVlFYtuWJa3Up-MAgbiusoxYwbrvVyljs2MNe2AMB8-kaxIEwNlw=s1360-w1360-h1020",
     status: "Funding",
     daysLeft: 10,
-    investors: 52
+    investors: 75
+  },
+  {
+    id: 6,
+    title: "Lakeside Villa",
+    location: "Indore, MP",
+    yield: 9.2,
+    type: "Luxury Villa",
+    price: 13000000,
+    raised: 11000000,
+    image: "https://thearowanavilla.com/assets/img/gallery/gallery-1.jpg",
+    status: "Funding",
+    daysLeft: 5,
+    investors: 90
   }
 ];
 
@@ -119,6 +158,9 @@ const HomePage = () => {
   const statsRef = useRef(null);
   const howItWorksRef = useRef(null);
   const testimonialsRef = useRef(null);
+  
+  // State for controlling the modal visibility
+  const [showModal, setShowModal] = useState(false);
 
   const featuresInView = useInView(featuresRef, { once: true, amount: 0.3 });
   const statsInView = useInView(statsRef, { once: true, amount: 0.3 });
@@ -126,132 +168,36 @@ const HomePage = () => {
   const testimonialsInView = useInView(testimonialsRef, { once: true, amount: 0.3 });
 
   return (
-    <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center">
-        {/* Background with gradient overlay */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center" 
-          style={{ 
-            backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1973&q=80')",
-            backgroundAttachment: "fixed"
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-gradient-start via-gradient-mid to-gradient-end opacity-90"></div>
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="flex flex-col lg:flex-row items-center">
-            <div className="lg:w-1/2 mb-12 lg:mb-0">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <Badge variant="primary" size="md" className="mb-6 backdrop-blur-sm bg-white/20 text-white border border-white/20">
-                  Powered by Arbitrum
-                </Badge>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight">
-                  Invest in Real Estate on the <span className="text-secondary-400">Blockchain</span>
-                </h1>
-                <p className="mt-6 text-xl sm:text-2xl text-white/90 max-w-xl">
-                  Fractional ownership with automated payouts. Low barriers to entry. Global access.
-                </p>
-                
-                <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                  <Button
-                    href="/properties"
-                    variant="gradient"
-                    size="lg"
-                    icon={<ArrowUpRight className="h-5 w-5" />}
-                    iconPosition="right"
-                    animated
-                    glow
-                  >
-                    Explore Properties
-                  </Button>
-                  <Button
-                    href="#how-it-works"
-                    variant="ghost"
-                    size="lg"
-                    icon={<ChevronRight className="h-5 w-5" />}
-                    iconPosition="right"
-                  >
-                    Learn How It Works
-                  </Button>
-                </div>
-              </motion.div>
-            </div>
-            
-            <div className="lg:w-1/2 lg:pl-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="relative"
-              >
-                <div className="absolute -top-6 -left-6 w-32 h-32 bg-secondary-500 opacity-20 rounded-full blur-2xl"></div>
-                <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-primary-400 opacity-20 rounded-full blur-2xl"></div>
-                
-                <div className="relative bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20 shadow-xl">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h3 className="text-xl font-bold text-white">Featured Property</h3>
-                      <p className="text-white/80">Miami Luxury Villa</p>
-                    </div>
-                    <Badge variant="sunset" size="md">8.5% Yield</Badge>
-                  </div>
-                  
-                  <div className="rounded-lg overflow-hidden mb-4">
-                    <img 
-                      src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80" 
-                      alt="Luxury Villa" 
-                      className="w-full h-48 object-cover" 
-                    />
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-white/90 font-medium">Funding Progress</span>
-                        <span className="text-white">78%</span>
-                      </div>
-                      <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-primary-400 to-secondary-500 rounded-full"
-                          style={{ width: '78%' }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 text-white">
-                      <div>
-                        <p className="text-white/70 text-xs">Price per Token</p>
-                        <p className="font-semibold">$100 USDC</p>
-                      </div>
-                      <div>
-                        <p className="text-white/70 text-xs">Total Investors</p>
-                        <p className="font-semibold">48 Participants</p>
-                      </div>
-                    </div>
-                    
-                    <Button
-                      href="/properties/1"
-                      variant="gradient"
-                      size="md"
-                      className="w-full"
-                      animated
-                      glow
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section with improved responsiveness */}
+      <header className="bg-primary-900 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold sm:text-5xl">Invest in Real Estate Smarter</h1>
+          <p className="mt-4 text-xl text-white/80">Fractional ownership with automated payouts. Low barriers to entry. Global access.</p>
+          <div className="mt-10 flex flex-col sm:flex-row gap-4">
+            <Button
+              href="/properties"
+              variant="gradient"
+              size="lg"
+              icon={<ArrowUpRight className="h-5 w-5" />}
+              iconPosition="right"
+              animated
+              glow
+            >
+              Explore Properties
+            </Button>
+            <Button
+              onClick={() => setShowModal(true)}
+              variant="ghost"
+              size="lg"
+              icon={<ChevronRight className="h-5 w-5" />}
+              iconPosition="right"
+            >
+              Learn How It Works
+            </Button>
           </div>
         </div>
-      </section>
+      </header>
 
       {/* Stats Section */}
       <section className="py-12 bg-gradient-to-br from-gradient-start to-gradient-mid">
@@ -528,24 +474,10 @@ const HomePage = () => {
       {/* Testimonials */}
       <section 
         ref={testimonialsRef}
-        className="py-24 bg-gradient-to-br from-night-dark to-primary-900"
+        className="py-12 bg-gray-100"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={testimonialsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
-            <Badge variant="sunset" className="mb-4">Testimonials</Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">
-              What Our Investors Say
-            </h2>
-            <p className="mt-4 text-xl text-white/80 max-w-3xl mx-auto">
-              Join thousands of satisfied investors who are building wealth through real estate on BlockEstate
-            </p>
-          </motion.div>
-
+          <h2 className="text-3xl font-bold text-center">What Users Say</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
@@ -629,6 +561,161 @@ const HomePage = () => {
           </motion.div>
         </div>
       </section>
+      {/* Company Information Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gradient-to-br from-primary-900 to-night-dark text-white rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6 md:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold">About Block Estate</h2>
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-2 text-secondary-400">Transforming Real Estate. Empowering Futures.</h3>
+                  <p className="text-white/80">
+                    At Block Estate, we're reimagining real estate investment through the power of blockchain. 
+                    Our mission is to break down barriers and make property ownership more accessible, transparent, 
+                    and inclusive for everyone. We're not just building a platform—we're shaping the future of real 
+                    estate through decentralization, innovation, and community-driven growth.
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-semibold mb-2 text-secondary-400">A Visionary Team</h3>
+                  <p className="text-white/80">
+                    Joining Block Estate means becoming part of a bold and passionate team that's redefining what's 
+                    possible in the PropTech space. From blockchain developers to real estate strategists, our people 
+                    are united by a shared purpose: to democratize property investment and unlock new opportunities for all.
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-semibold mb-2 text-secondary-400">At Block Estate, you'll experience:</h3>
+                  <ul className="space-y-4">
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <Users className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">A Culture of Collaboration</h4>
+                        <p className="text-white/70 text-sm">
+                          We foster an open, inclusive environment where teamwork thrives and every voice counts. 
+                          Collaboration isn't just encouraged—it's at the heart of everything we do.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <Lock className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">Empowerment and Ownership</h4>
+                        <p className="text-white/70 text-sm">
+                          Here, you're trusted to take initiative, lead with ideas, and own your impact. 
+                          We believe great things happen when individuals are empowered to drive change.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <RefreshCw className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">Growth and Learning</h4>
+                        <p className="text-white/70 text-sm">
+                          As the industry evolves, so will you. With hands-on experience, expert mentorship, 
+                          and access to cutting-edge blockchain technologies, your growth journey never stops.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <Globe className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">Impactful Work</h4>
+                        <p className="text-white/70 text-sm">
+                          Be part of something bigger. Your contributions will help revolutionize how people 
+                          invest in real estate—making it more secure, more transparent, and more inclusive than ever before.
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-semibold mb-2 text-secondary-400">Why Block Estate?</h3>
+                  <ul className="space-y-4">
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <Database className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">Blockchain-Driven Innovation</h4>
+                        <p className="text-white/70 text-sm">
+                          We're leading the shift to decentralized property ownership with real-world utility, transparency, and trust.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <ArrowUpRight className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">Limitless Opportunities</h4>
+                        <p className="text-white/70 text-sm">
+                          Whether you're just starting your career or looking to level up, Block Estate offers a launchpad to thrive, innovate, and lead.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <Users className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">Diverse and Inclusive by Design</h4>
+                        <p className="text-white/70 text-sm">
+                          We celebrate diverse ideas and backgrounds, creating a workplace where everyone has the freedom to grow and make a difference.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex">
+                      <div className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-secondary-500 mr-3 mt-0.5">
+                        <Globe className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">Real Impact</h4>
+                        <p className="text-white/70 text-sm">
+                          Your work won't just be seen—it will change how people engage with property investment across the globe.
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="mt-8 flex justify-end">
+                <Button 
+                  onClick={() => setShowModal(false)}
+                  variant="gradient"
+                  size="md"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

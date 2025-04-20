@@ -3,45 +3,122 @@ import { useAccount } from 'wagmi';
 import { Link } from 'react-router-dom';
 import { PieChart, Wallet, Building, LineChart, ArrowUpRight, ArrowDownRight, Clock, Users, AlertCircle } from 'lucide-react';
 
-// Mock user portfolio data
+// Mock data for user portfolio
 const mockPortfolio = {
-  totalInvested: 5200,
-  totalValue: 5850,
-  totalProfit: 650,
-  profitPercentage: 12.5,
+  totalInvested: 14300,
+  totalValue: 16500,
+  totalYield: 8.2,
   properties: [
     {
       id: 1,
-      title: "Luxury Villa in Miami",
-      location: "Miami, FL",
+      title: "Jagran Lakecity University",
+      location: "Bhopal, MP",
+      yield: 8.5,
+      type: "Educational Campus",
+      price: 12000000,
+      raised: 9000000,
+      image: "https://lh3.googleusercontent.com/p/AF1QipNMj4qkotE7gXSCqwbU9iGD9HAIV7wo1ULMDuZk=s1360-w1360-h1020",
+      status: "Funding",
       invested: 3000,
-      currentValue: 3450,
-      profit: 450,
-      profitPercentage: 15,
-      image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80",
-      units: 30,
-      ownership: 0.3
+      value: 3600,
+      tokens: 30,
+      tokenSymbol: "JLUNI",
+      change: 20
+    },
+    {
+      id: 2,
+      title: "Singapore Business Park",
+      location: "Singapore",
+      yield: 7.8,
+      type: "Business Park",
+      price: 15000000,
+      raised: 11000000,
+      image: "https://lh3.googleusercontent.com/p/AF1QipOWG4LxpLNGPtHNdr8oC9PSXH3nZ7fOMKtgRiYP=s1360-w1360-h1020",
+      status: "Funding",
+      invested: 2000,
+      value: 2066,
+      tokens: 13,
+      tokenSymbol: "SGBP",
+      change: 3.3
     },
     {
       id: 3,
-      title: "Commercial Office Space",
-      location: "Chicago, IL",
+      title: "DB Mall",
+      location: "Bhopal, MP",
+      yield: 7.8,
+      type: "Commercial Mall",
+      price: 8000000,
+      raised: 5000000,
+      image: "https://helptravelindia.com/wp-content/uploads/2024/05/DB-City-Mall-Bhopal-Madhya-Pradesh.jpg",
+      status: "Funding",
+      invested: 2500,
+      value: 2625,
+      tokens: 25,
+      tokenSymbol: "DBMAL",
+      change: 5
+    },
+    {
+      id: 4,
+      title: "Exotica Farm House",
+      location: "Bhopal, MP",
+      yield: 8.2,
+      type: "Luxury Farm House",
+      price: 7500000,
+      raised: 5200000,
+      image: "https://lh3.googleusercontent.com/p/AF1QipPdcgU9Yap_LpnuyT8MXABOcA8F5VVJjD-0WrWM=s1360-w1360-h1020",
+      status: "Funding",
+      invested: 1800,
+      value: 1872,
+      tokens: 14,
+      tokenSymbol: "EXFH",
+      change: 4
+    },
+    {
+      id: 5,
+      title: "NRK Business Park",
+      location: "Indore, MP",
+      yield: 8.9,
+      type: "Business Park",
+      price: 10500000,
+      raised: 8000000,
+      image: "https://lh3.googleusercontent.com/gps-cs-s/AB5caB9T79ceP2e9b4UBgNjqjHfgbMxSDShB15fMf-iP6T06ZnXq1JghR5fEjCY7xkRPzeBwPEsEhRkNQvvs43mZ9mWVlFYtuWJa3Up-MAgbiusoxYwbrvVyljs2MNe2AMB8-kaxIEwNlw=s1360-w1360-h1020",
+      status: "Funding",
       invested: 2200,
-      currentValue: 2400,
-      profit: 200,
-      profitPercentage: 9.1,
-      image: "https://images.unsplash.com/photo-1577415124269-fc1140a69e91?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80",
-      units: 22,
-      ownership: 0.07
+      value: 2530,
+      tokens: 22,
+      tokenSymbol: "NRKBP",
+      change: 15
+    },
+    {
+      id: 6,
+      title: "Lakeside Villa",
+      location: "Indore, MP",
+      yield: 9.2,
+      type: "Luxury Villa",
+      price: 13000000,
+      raised: 11000000,
+      image: "https://thearowanavilla.com/assets/img/gallery/gallery-1.jpg",
+      status: "Funding",
+      invested: 2800,
+      value: 3360,
+      tokens: 28,
+      tokenSymbol: "LSVIL",
+      change: 20
     }
   ],
   transactions: [
-    { id: 1, type: "Purchase", property: "Luxury Villa in Miami", amount: 3000, date: "2025-01-15", status: "Completed" },
-    { id: 2, type: "Dividend", property: "Luxury Villa in Miami", amount: 65, date: "2025-02-15", status: "Completed" },
-    { id: 3, type: "Purchase", property: "Commercial Office Space", amount: 2200, date: "2025-02-20", status: "Completed" },
-    { id: 4, type: "Dividend", property: "Luxury Villa in Miami", amount: 65, date: "2025-03-15", status: "Completed" },
-    { id: 5, type: "Dividend", property: "Commercial Office Space", amount: 50, date: "2025-03-20", status: "Completed" },
-    { id: 6, type: "Dividend", property: "Luxury Villa in Miami", amount: 65, date: "2025-04-15", status: "Pending" }
+    { id: 1, type: "Purchase", property: "Jagran Lakecity University", amount: 3000, date: "2025-01-15", status: "Completed" },
+    { id: 2, type: "Dividend", property: "Jagran Lakecity University", amount: 65, date: "2025-02-15", status: "Completed" },
+    { id: 3, type: "Purchase", property: "MANIT Bhopal", amount: 2000, date: "2025-02-20", status: "Completed" },
+    { id: 4, type: "Dividend", property: "Jagran Lakecity University", amount: 65, date: "2025-03-15", status: "Completed" },
+    { id: 5, type: "Dividend", property: "MANIT Bhopal", amount: 50, date: "2025-03-20", status: "Completed" },
+    { id: 6, type: "Dividend", property: "Jagran Lakecity University", amount: 65, date: "2025-04-15", status: "Pending" },
+    { id: 7, type: "Purchase", property: "DB Mall", amount: 2500, date: "2025-03-01", status: "Completed" },
+    { id: 8, type: "Dividend", property: "DB Mall", amount: 60, date: "2025-03-25", status: "Completed" },
+    { id: 9, type: "Purchase", property: "People Mall", amount: 1800, date: "2025-03-05", status: "Completed" },
+    { id: 10, type: "Purchase", property: "NRK Business Park", amount: 2200, date: "2025-03-10", status: "Completed" },
+    { id: 11, type: "Purchase", property: "Lakecite Villa", amount: 2800, date: "2025-03-15", status: "Completed" },
+    { id: 12, type: "Dividend", property: "People Mall", amount: 45, date: "2025-04-05", status: "Completed" }
   ]
 };
 
@@ -142,10 +219,10 @@ const DashboardPage = () => {
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Total Profit</dt>
                     <dd className="flex items-center">
-                      <div className="text-lg font-medium text-gray-900">${mockPortfolio.totalProfit.toLocaleString()}</div>
+                      <div className="text-lg font-medium text-gray-900">${(mockPortfolio.totalValue - mockPortfolio.totalInvested).toLocaleString()}</div>
                       <span className="ml-2 flex items-center text-sm font-medium text-green-600">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        {mockPortfolio.profitPercentage}%
+                        {((mockPortfolio.totalValue - mockPortfolio.totalInvested) / mockPortfolio.totalInvested * 100).toFixed(1)}%
                       </span>
                     </dd>
                   </dl>
@@ -210,49 +287,52 @@ const DashboardPage = () => {
                               className="h-full w-48 object-cover"
                             />
                           </div>
-                          <div className="flex-1 p-6">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-medium text-gray-900">{property.title}</h3>
-                              {property.profitPercentage > 0 ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                                  {property.profitPercentage}%
+                          <div className="flex-1 bg-white p-6 flex flex-col justify-between">
+                            <div className="flex-1">
+                              <div className="flex justify-between">
+                                <p className="text-sm font-medium text-blue-600">
+                                  {property.type}
+                                </p>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${property.change >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                  {property.change >= 0 ? (
+                                    <ArrowUpRight className="w-3 h-3 mr-1" />
+                                  ) : (
+                                    <ArrowDownRight className="w-3 h-3 mr-1" />
+                                  )}
+                                  {property.change >= 0 ? '+' : ''}{property.change}%
                                 </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  <ArrowDownRight className="h-3 w-3 mr-1" />
-                                  {Math.abs(property.profitPercentage)}%
-                                </span>
-                              )}
-                            </div>
-                            <p className="mt-1 text-sm text-gray-500">{property.location}</p>
-                            
-                            <div className="mt-4 grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-sm text-gray-500">Invested</p>
-                                <p className="text-sm font-medium text-gray-900">${property.invested.toLocaleString()}</p>
                               </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Current Value</p>
-                                <p className="text-sm font-medium text-gray-900">${property.currentValue.toLocaleString()}</p>
+                              <div className="block mt-2">
+                                <p className="text-xl font-semibold text-gray-900">{property.title}</p>
+                                <p className="mt-1 text-sm text-gray-500">{property.location}</p>
                               </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Units Owned</p>
-                                <p className="text-sm font-medium text-gray-900">{property.units}</p>
+                              <div className="mt-4 grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-sm text-gray-500">Invested</p>
+                                  <p className="text-sm font-medium text-gray-900">${property.invested.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-500">Current Value</p>
+                                  <p className="text-sm font-medium text-gray-900">${property.value.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-500">Tokens Owned</p>
+                                  <p className="text-sm font-medium text-gray-900">{property.tokens}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-500">Token Symbol</p>
+                                  <p className="text-sm font-medium text-gray-900">{property.tokenSymbol}</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Ownership</p>
-                                <p className="text-sm font-medium text-gray-900">{property.ownership}%</p>
+                              
+                              <div className="mt-5">
+                                <Link
+                                  to={`/properties/${property.id}`}
+                                  className="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-medium rounded text-blue-600 bg-white hover:bg-blue-50"
+                                >
+                                  View Details
+                                </Link>
                               </div>
-                            </div>
-                            
-                            <div className="mt-5">
-                              <Link
-                                to={`/properties/${property.id}`}
-                                className="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-medium rounded text-blue-600 bg-white hover:bg-blue-50"
-                              >
-                                View Details
-                              </Link>
                             </div>
                           </div>
                         </div>

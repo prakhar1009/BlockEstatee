@@ -129,12 +129,72 @@ const NFTGeneratorPage = () => {
     setGenerationError(null);
     
     try {
+      // Generate a unique ID for this generation attempt to track in logs
+      const generationId = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
+      console.log(`[${generationId}] Starting NFT generation process`);
+      
       const combinedDescription = buildCompletePropertyDescription();
-      console.log('Generating NFT with complete description:', combinedDescription);
+      console.log(`[${generationId}] Property description:`, combinedDescription);
+      console.log(`[${generationId}] Style: ${style}, Era: ${era}, Mood: ${mood}`);
       
-      const imageUrl = await aiService.generateNFTArt(combinedDescription, style, era, mood);
+      // First generate a preview with lower quality settings
+      console.log(`[${generationId}] Generating preview image`);
+      addNotification(
+        'Generating Preview',
+        'Creating a preview of your NFT. This may take a moment...',
+        'info'
+      );
       
-      setNftImage(imageUrl);
+      // Generate preview and final NFT images
+      const previewUrl = await aiService.generateNFTArt(
+        combinedDescription, 
+        style, 
+        era, 
+        mood,
+        true // preview mode flag
+      );
+      
+      console.log(`[${generationId}] Preview generation successful`);
+      
+      // Validate the image URL before setting it
+      if (previewUrl && !previewUrl.includes('fallback-nft.jpg')) {
+        // Show preview to user
+        setNftImage(previewUrl);
+        
+        addNotification(
+          'Preview Ready',
+          'Your NFT preview is ready. Generating final high-quality version...',
+          'success'
+        );
+      } else {
+        console.warn(`[${generationId}] Preview generation returned fallback image`);
+      }
+      
+      // Generate final high-quality version
+      console.log(`[${generationId}] Generating final high-quality image`);
+      const finalImageUrl = await aiService.generateNFTArt(
+        combinedDescription, 
+        style, 
+        era, 
+        mood,
+        false // final mode flag
+      );
+      
+      console.log(`[${generationId}] Final image generation complete`);
+      
+      // Validate the final image URL
+      if (finalImageUrl && !finalImageUrl.includes('fallback-nft.jpg')) {
+        setNftImage(finalImageUrl);
+        console.log(`[${generationId}] NFT generation process completed successfully`);
+      } else {
+        console.warn(`[${generationId}] Final generation returned fallback image`);
+        // If we got a fallback, but have a valid preview, keep using the preview
+        if (previewUrl && !previewUrl.includes('fallback-nft.jpg')) {
+          console.log(`[${generationId}] Using preview image as final image`);
+        } else {
+          throw new Error('Failed to generate a valid NFT image');
+        }
+      }
       
       addNotification(
         'NFT Generated Successfully',
@@ -145,13 +205,29 @@ const NFTGeneratorPage = () => {
       setStep(3);
     } catch (error: any) {
       console.error('Error generating NFT:', error);
-      setGenerationError(error.message || 'Failed to generate NFT image. Please try again.');
+      const errorMessage = error.message || 'Failed to generate NFT image. Please try again.';
+      setGenerationError(errorMessage);
       
-      addNotification(
-        'Generation Failed',
-        'There was an error generating your NFT. Please try again.',
-        'error'
-      );
+      // Check if API key is missing
+      if (errorMessage.includes('API key') || errorMessage.includes('authorization')) {
+        addNotification(
+          'API Key Error',
+          'Missing or invalid API key. Please check your environment variables.',
+          'error'
+        );
+      } else if (errorMessage.includes('credit limit') || errorMessage.includes('402')) {
+        addNotification(
+          'API Credit Limit Exceeded',
+          'Your Hugging Face API credit limit has been exceeded. Please try again later.',
+          'error'
+        );
+      } else {
+        addNotification(
+          'Generation Failed',
+          'There was an error generating your NFT. Please try again with different settings.',
+          'error'
+        );
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -169,18 +245,14 @@ const NFTGeneratorPage = () => {
       // Connect to blockchain
       await blockchainService.connectToBlockchain();
       
-      // Mint the property NFT with enhanced property details
+      // Mint the property NFT with basic property details
+      // Note: We're only passing the properties that the mintPropertyNFT function expects
       const mintResponse = await blockchainService.mintPropertyNFT({
         name: propertyDetails.name,
-        description: propertyDetails.description,
+        description: propertyDetails.description + ` (${propertyDetails.bedrooms} bedrooms, ${propertyDetails.bathrooms} bathrooms, ${propertyDetails.squareFeet} sq ft, built ${propertyDetails.yearBuilt}, ${propertyDetails.propertyType})`,
         location: propertyDetails.location,
         price: Number(propertyDetails.price),
         image: nftImage || '',
-        bedrooms: propertyDetails.bedrooms,
-        bathrooms: propertyDetails.bathrooms,
-        squareFeet: propertyDetails.squareFeet,
-        yearBuilt: propertyDetails.yearBuilt,
-        propertyType: propertyDetails.propertyType,
         owner: '0x1234567890123456789012345678901234567890' // This would be the user's actual wallet address in production
       });
       
@@ -191,6 +263,7 @@ const NFTGeneratorPage = () => {
         Number(propertyDetails.price) / 10000 // Price per share
       );
       
+      // Store all details including additional property information
       setMintDetails({
         ...mintResponse,
         ...fractionResponse,
@@ -684,7 +757,7 @@ const NFTGeneratorPage = () => {
                         </select>
                       </div>
                       
-                      <div className="p-4 bg-gradient-to-r from-primary-800/60 to-secondary-900/60 rounded-lg">
+                      <div className="p-4 bg-gradient-to-r from-primary-800/60 to-night-dark rounded-lg">
                         <h4 className="font-semibold text-white flex items-center">
                           <Palette className="h-4 w-4 mr-2 text-secondary-400" />
                           StyleGuide
@@ -844,6 +917,19 @@ const NFTGeneratorPage = () => {
                             src={nftImage}
                             alt="Generated NFT"
                             className="relative w-full h-64 object-cover rounded-lg"
+                            onError={(e) => {
+                              console.error("Error loading NFT image");
+                              // Prevent infinite loop by checking if we're already using the fallback
+                              if (!e.currentTarget.src.includes('fallback-nft.jpg')) {
+                                e.currentTarget.src = "/images/fallback-nft.jpg"; // Fallback image
+                                // Only show notification once
+                                addNotification(
+                                  'Image Display Error',
+                                  'There was an issue displaying your NFT. Using fallback image.',
+                                  'warning'
+                                );
+                              }
+                            }}
                           />
                         </div>
                       )}
@@ -1003,7 +1089,14 @@ const NFTGeneratorPage = () => {
                             <img 
                               src={nftImage} 
                               alt="NFT" 
-                              className="relative rounded-lg w-full h-40 object-cover" 
+                              className="relative rounded-lg w-full h-40 object-cover"
+                              onError={(e) => {
+                                console.error("Error loading NFT image in success view");
+                                // Prevent infinite loop by checking if we're already using the fallback
+                                if (!e.currentTarget.src.includes('fallback-nft.jpg')) {
+                                  e.currentTarget.src = "/images/fallback-nft.jpg"; // Fallback image
+                                }
+                              }}
                             />
                           </div>
                           

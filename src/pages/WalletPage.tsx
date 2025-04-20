@@ -31,29 +31,26 @@ const WalletPage = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center">
-            <Wallet className="h-16 w-16 text-gray-400 mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900">Connect Your Wallet</h1>
-            <p className="mt-2 text-gray-500 max-w-md text-center">
-              Please connect your wallet to view your balance and transactions.
-            </p>
-            <button
-              className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md"
-            >
-              Connect Wallet
-            </button>
-          </div>
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6">Connect Your Wallet</h1>
+          <p className="mt-2 text-gray-500 max-w-md text-center">
+            Please connect your wallet to view your balance and transactions.
+          </p>
+          <button
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md"
+          >
+            Connect Wallet
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your Wallet</h1>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Wallet Overview</h1>
         <p className="mt-2 text-gray-600">Manage your crypto assets and transactions</p>
 
         {/* Wallet Overview */}
@@ -248,74 +245,41 @@ const WalletPage = () => {
           </div>
           <div className="bg-white overflow-hidden">
             {transactions.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        From/To
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {transactions.map((tx) => (
-                      <tr key={tx.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            tx.type === 'received' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {tx.type === 'received' ? 'Received' : 'Sent'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {tx.amount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {tx.type === 'received' ? (
-                            <span>From: {tx.from}</span>
-                          ) : (
-                            <span>To: {tx.to}</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {tx.date}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {tx.status === 'completed' ? (
-                            <span className="inline-flex items-center text-green-600">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Completed
-                            </span>
-                          ) : tx.status === 'pending' ? (
-                            <span className="inline-flex items-center text-yellow-600">
-                              <Clock className="h-4 w-4 mr-1" />
-                              Pending
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center text-red-600">
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Failed
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                {transactions.map((tx) => (
+                  <div key={tx.id} className="bg-white p-4 rounded-lg shadow">
+                    <p className="text-sm">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        tx.type === 'received' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {tx.type === 'received' ? 'Received' : 'Sent'}
+                      </span>
+                      <span className="ml-2">{tx.amount}</span>
+                      <span className="ml-2">{tx.type === 'received' ? `From: ${tx.from}` : `To: ${tx.to}`}</span>
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">{tx.date}</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {tx.status === 'completed' ? (
+                        <span className="inline-flex items-center text-green-600">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Completed
+                        </span>
+                      ) : tx.status === 'pending' ? (
+                        <span className="inline-flex items-center text-yellow-600">
+                          <Clock className="h-4 w-4 mr-1" />
+                          Pending
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-red-600">
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Failed
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="py-12 flex flex-col items-center justify-center">

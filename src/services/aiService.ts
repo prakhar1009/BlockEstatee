@@ -1,14 +1,31 @@
 import axios from 'axios';
+import geminiService from './geminiService';
 
 // AI service for generating property NFT images
 class AIService {
   private static instance: AIService;
-  private apiKey: string = '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'; // This would typically come from environment variables
-  private apiUrl: string = 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev';
+  private huggingfaceApiKey: string = process.env.HUGGINGFACE_API_KEY || '';
+  private geminiApiKey: string = process.env.GEMINI_API_KEY || '';
+  private apiUrl: string = 'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0';
   private maxRetries: number = 3;
   private creditLimitExceeded: boolean = false;
   
-  private constructor() {}
+  private constructor() {
+    // Try to load API keys from window.ENV if available (for client-side)
+    if (typeof window !== 'undefined' && (window as any).ENV) {
+      this.huggingfaceApiKey = (window as any).ENV.HUGGINGFACE_API_KEY || this.huggingfaceApiKey;
+      this.geminiApiKey = (window as any).ENV.GEMINI_API_KEY || this.geminiApiKey;
+    }
+    
+    // Log API key status (without revealing the actual keys)
+    console.log(`HuggingFace API Key status: ${this.huggingfaceApiKey ? 'Available' : 'Missing'}`);
+    console.log(`Gemini API Key status: ${this.geminiApiKey ? 'Available' : 'Missing'}`);
+    
+    // Initialize Gemini service with API key if available
+    if (this.geminiApiKey) {
+      geminiService.setApiKey(this.geminiApiKey);
+    }
+  }
 
   public static getInstance(): AIService {
     if (!AIService.instance) {
@@ -17,7 +34,17 @@ class AIService {
     return AIService.instance;
   }
 
-  private async makeRequest(prompt: string, retryCount = 0): Promise<string> {
+  private async makeRequest(
+    prompt: string, 
+    style: string = 'Default', 
+    era: string = 'Not specified', 
+    mood: string = 'Nostalgic',
+    isPreview: boolean = false,
+    retryCount = 0
+  ): Promise<string> {
+    const requestId = Math.random().toString(36).substring(2, 15);
+    console.log(`[${requestId}] Attempting image generation for prompt: ${prompt}`);
+    
     try {
       // If we already know credits are exceeded, don't attempt the API call
       if (this.creditLimitExceeded) {
@@ -25,38 +52,107 @@ class AIService {
         return this.getFallbackImage(prompt);
       }
       
-      console.log('Generating image with prompt:', prompt);
+      // Use HuggingFace API key for image generation
+      const apiKey = this.huggingfaceApiKey;
       
       // Validate API key before making request
-      if (!this.apiKey) {
-        console.error('Missing API key for image generation');
+      if (!apiKey) {
+        console.error('Missing HuggingFace API key for image generation');
         return this.getFallbackImage(prompt);
       }
+      
+      // Add uniqueness factors to prevent duplicate images
+      const uniqueId = Math.floor(Math.random() * 2147483647); // Random seed within int32 range
+      const uniqueNoise = Math.random().toString(36).substring(2, 10);
+      
+      // First, enhance the prompt using Gemini API if available
+      console.log(`[${requestId}] Enhancing prompt with Gemini API`);
+      let enhancedPrompt;
+      
+      try {
+        // Use Gemini API to enhance the prompt
+        enhancedPrompt = await geminiService.enhancePrompt(prompt, style, era, mood);
+        console.log(`[${requestId}] Prompt enhanced successfully with Gemini API`);
+      } catch (error) {
+        console.error(`[${requestId}] Error enhancing prompt with Gemini API:`, error);
+        // Fall back to basic prompt enhancement if Gemini API fails
+        enhancedPrompt = `Create a detailed, high-quality visualization of a real estate property. 
+        Style: ${style}. Era: ${era}. Mood: ${mood}. 
+        ${prompt} 
+        Unique identifier: ${uniqueNoise}.
+        Focus on architectural details, lighting, and surrounding environment.
+        Ensure the image is crisp, clear, and professionally composed with proper proportions.`;
+      }
+      
+      // Add unique identifier to the enhanced prompt to prevent duplicates
+      enhancedPrompt = `${enhancedPrompt} (Unique identifier: ${uniqueNoise})`;
+      
+      console.log(`[${requestId}] Generating image with seed: ${uniqueId}`);
+      
+      // Set quality parameters based on whether this is a preview or final image
+      // Adding a timestamp to ensure uniqueness even with the same seed
+      const timestamp = Date.now();
+      const uniqueSeedWithTime = uniqueId + (timestamp % 1000);
+      
+      const qualityParams = isPreview ? {
+        guidance_scale: 7.0,
+        num_inference_steps: 30,
+        width: 768,
+        height: 768,
+        seed: uniqueSeedWithTime
+      } : {
+        guidance_scale: 9.0, // Higher guidance scale for better quality
+        num_inference_steps: 75, // More steps for higher detail
+        width: 1024,
+        height: 1024,
+        seed: uniqueSeedWithTime,
+        negative_prompt: "blurry, low quality, low resolution, poorly rendered, bad anatomy, distorted, disfigured"
+      };
       
       // In a real production environment, this would be a server-side call to protect the API key
       const response = await axios.post(
         this.apiUrl,
-        { inputs: prompt },
+        { 
+          inputs: enhancedPrompt,
+          parameters: qualityParams
+        },
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           responseType: 'arraybuffer',
-          timeout: 30000, // 30 second timeout
+          timeout: isPreview ? 30000 : 60000, // Longer timeout for final images
         }
       );
 
       // Check if we received a valid image response
-      if (response.data && response.data.byteLength > 100) {
+      if (response.data && response.data.byteLength > 1000) { // Ensure we have a substantial image
         // Convert the image buffer to a base64 data URL
         const base64 = Buffer.from(response.data).toString('base64');
-        return `data:image/jpeg;base64,${base64}`;
+        const imageUrl = `data:image/jpeg;base64,${base64}`;
+        
+        console.log(`[${requestId}] Image generated successfully, size: ${response.data.byteLength} bytes`);
+        return imageUrl;
       } else {
-        console.warn('Received empty or invalid image data from API');
+        console.warn(`[${requestId}] Received empty or invalid image data from API, size: ${response.data?.byteLength || 0} bytes`);
+        
+        if (retryCount < this.maxRetries) {
+          const delay = Math.pow(2, retryCount) * 1000;
+          console.log(`[${requestId}] Retrying image generation after ${delay}ms (attempt ${retryCount + 1}/${this.maxRetries})`);
+          
+          return new Promise(resolve => {
+            setTimeout(async () => {
+              resolve(await this.makeRequest(prompt, style, era, mood, isPreview, retryCount + 1));
+            }, delay);
+          });
+        }
+        
         return this.getFallbackImage(prompt);
       }
     } catch (error: any) {
+      console.error(`[${requestId}] Error in makeRequest: ${error.message}`);
+      
       // Check specifically for 402 Payment Required status
       if (error.response && error.response.status === 402) {
         console.error('API credit limit exceeded: Monthly included credits for Inference Providers have been exceeded');
@@ -68,21 +164,19 @@ class AIService {
       }
       
       // Log detailed error information for debugging
-      console.error('Error generating image:', error.message);
-      
       if (error.response) {
-        console.error('API response status:', error.response.status);
-        console.error('API response headers:', error.response.headers);
+        console.error(`[${requestId}] API response status:`, error.response.status);
+        console.error(`[${requestId}] API response headers:`, error.response.headers);
       }
       
       // Implement retry with exponential backoff for temporary failures
       if (retryCount < this.maxRetries && !this.creditLimitExceeded) {
         const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
-        console.log(`Retrying image generation after ${delay}ms (attempt ${retryCount + 1}/${this.maxRetries})`);
+        console.log(`[${requestId}] Retrying image generation after ${delay}ms (attempt ${retryCount + 1}/${this.maxRetries})`);
         
         return new Promise(resolve => {
           setTimeout(async () => {
-            resolve(await this.makeRequest(prompt, retryCount + 1));
+            resolve(await this.makeRequest(prompt, style, era, mood, isPreview, retryCount + 1));
           }, delay);
         });
       }
@@ -150,24 +244,28 @@ class AIService {
 
   public async generatePropertyImage(description: string): Promise<string> {
     const prompt = `A photorealistic image of a real estate property: ${description}. Architectural visualization, high quality render, professional real estate photography style.`;
-    return this.makeRequest(prompt);
+    return this.makeRequest(prompt, 'Photorealistic', 'Modern', 'Serene', false);
   }
 
   public async generateNFTArt(
     propertyDetails: string,
     style: string = 'Default',
     era: string = 'Not specified',
-    mood: string = 'Nostalgic'
+    mood: string = 'Nostalgic',
+    isPreview: boolean = false
   ): Promise<string> {
-    // Extract key property characteristics if present in the details
-    const bedroomMatch = propertyDetails.match(/(\d+)\s*bed(room)?s?/i);
-    const bathroomMatch = propertyDetails.match(/(\d+)\s*bath(room)?s?/i);
-    const sqftMatch = propertyDetails.match(/(\d+(?:,\d+)?)\s*sq(uare)?\s*ft/i);
+    console.log(`NFT Generation started - Preview mode: ${isPreview}`);
+    console.log(`Parameters - Style: ${style}, Era: ${era}, Mood: ${mood}`);
     
-    // Build a more detailed property description
-    let enhancedDetails = propertyDetails;
+    try {
+      const timestamp = Date.now();  // Add timestamp for uniqueness
+      const randomId = Math.random().toString(36).substring(2, 10);
+      let enhancedDetails = `${propertyDetails} (unique ID: ${timestamp}-${randomId})`;
     
-    // Add extracted features if they exist but aren't already in the prompt
+    const bedroomMatch = enhancedDetails.match(/(\d+)\s*bed(room)?s?/i);
+    const bathroomMatch = enhancedDetails.match(/(\d+)\s*bath(room)?s?/i);
+    const sqftMatch = enhancedDetails.match(/(\d+(?:,\d+)?)\s*sq(uare)?\s*ft/i);
+    
     const features = [];
     if (bedroomMatch && !enhancedDetails.includes('bedroom')) {
       features.push(`${bedroomMatch[1]} bedrooms`);
@@ -183,7 +281,7 @@ class AIService {
       enhancedDetails += '. Features ' + features.join(', ') + '.';
     }
     
-    // Base prompt with enhanced property details
+    // Create a more detailed base prompt
     let basePrompt = `Create a detailed, high-quality visualization of a real estate property: ${enhancedDetails}`;
     
     // Add style specification if provided
@@ -193,7 +291,7 @@ class AIService {
     
     // Add era context if provided
     if (era && era !== "Not specified") {
-      basePrompt += `, from the ${era}`;
+      basePrompt += `, from the ${era} era`;
     }
     
     // Add emotional tone
@@ -214,11 +312,49 @@ class AIService {
       basePrompt += `. Urban setting, clean lines, focus on efficient use of space and city views if applicable.`;
     }
     
-    // Add NFT styling with more detailed art direction
-    const finalPrompt = `${basePrompt}. Vibrant colors, neon sunset lighting, retrowave style, synthwave aesthetic, gradient purple to pink background, stylized as digital art for an NFT, extreme detail, 8k resolution, cinematic framing, professional CGI, unreal engine render.`;
+    // Customize the NFT styling based on the selected style
+    let nftStyling = "";
     
-    console.log("NFT Generation enhanced prompt:", finalPrompt);
-    return this.makeRequest(finalPrompt);
+    // Add a random variation factor to ensure uniqueness
+    const variations = [
+      "morning light", "afternoon glow", "evening sunset", "night illumination",
+      "dramatic shadows", "soft lighting", "high contrast", "muted tones",
+      "vibrant colors", "pastel palette", "monochromatic scheme", "complementary colors"
+    ];
+    const randomVariation = variations[Math.floor(Math.random() * variations.length)];
+    
+    switch(style.toLowerCase()) {
+      case 'photorealistic':
+        nftStyling = `Photorealistic rendering, ${randomVariation}, high dynamic range, physically accurate materials, detailed textures, architectural photography style, 8k resolution, crystal clear details, sharp focus`;
+        break;
+      case 'abstract':
+        nftStyling = `Abstract geometric shapes, ${randomVariation}, bold color blocks, minimalist composition, artistic interpretation of architectural elements, modern art style, precise lines`;
+        break;
+      case 'stylized':
+        nftStyling = `Stylized illustration, ${randomVariation}, bold outlines, exaggerated features, cartoon-like quality, vibrant colors, artistic interpretation, clean edges`;
+        break;
+      default: // Default to digital art style for NFTs
+        nftStyling = `Vibrant colors, ${randomVariation}, neon sunset lighting, retrowave style, synthwave aesthetic, gradient purple to pink background, stylized as digital art, extreme detail, 8k resolution, cinematic framing, professional CGI, ultra-high definition`;
+    }
+    
+    // Add NFT styling with more detailed art direction and uniqueness factors
+    const promptTimestamp = Date.now();
+    const uniqueId = Math.random().toString(36).substring(2, 10);
+    
+    // Add specific quality instructions to avoid blurry images
+    const qualityInstructions = "Ultra-high definition, crystal clear details, sharp focus, no blur, professional quality, suitable for an NFT, unreal engine render";
+    
+    const finalPrompt = `${basePrompt}. ${nftStyling}. ${qualityInstructions}. Unique identifier: ${promptTimestamp}-${uniqueId}.`;
+    
+      console.log("NFT Generation enhanced prompt:", finalPrompt);
+      const result = await this.makeRequest(finalPrompt, style, era, mood, isPreview);
+      console.log(`NFT Generation completed successfully - Preview mode: ${isPreview}`);
+      return result;
+    } catch (error) {
+      console.error(`NFT Generation failed - Preview mode: ${isPreview}`, error);
+      // Return a local fallback image instead of throwing
+      return `/images/fallback-nft.jpg`;
+    }
   }
 }
 
